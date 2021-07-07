@@ -71,12 +71,12 @@ namespace MSOfficeManager.API
             catch (Exception e)
             {
                 Close();
-                throw e;
+                throw new Exception($"Не удалось создать документ {path} ", e);
             }
         }
 
         /// <summary>
-        ///Open Document
+        /// Open Document
         /// - Открыть документ
         /// </summary>
         /// <param name="path"></param>
@@ -99,7 +99,37 @@ namespace MSOfficeManager.API
             catch (Exception e)
             {
                 Close();
-                throw e;
+                throw new Exception($"Не удалось открыть документ {path} ", e);
+            }
+        }
+
+        /// <summary>
+        /// Try Open Document
+        /// - попытаться открыть документ
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="readOnly"></param>
+        /// <returns></returns>
+        [HandleProcessCorruptedStateExceptions]
+        public ExcelDoc TryOpenDoc(string path, bool readOnly)
+        {
+            Workbook doc = null;
+            try
+            {
+                if (App == null) throw new Exception($"Не удалось открыть документ {path} приложение не запущено");
+                if (!readOnly && IsDocumentOpen(path)) throw new Exception($"Документ уже редактируется {path}");
+                TryPath = path;
+                doc = App.Workbooks.Open(path, Type.Missing, readOnly);
+                ExcelDoc d = new ExcelDoc(path, this, doc, readOnly);
+                Docs.Add(d);
+                TryPath = null;
+                return d;
+            }
+            catch (Exception e)
+            {
+                doc?.Close(false);
+                TryPath = null;
+                return null;
             }
         }
 

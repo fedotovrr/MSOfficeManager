@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text.RegularExpressions;
@@ -47,6 +48,8 @@ namespace MSOfficeManager.API
         {
             try
             {
+                if (System.IO.Path.GetDirectoryName(path) is string dir && !Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
                 HidePublishing hp = new HidePublishing();
                 hp.Start();
                 Document.ExportAsFixedFormat(path, WdExportFormat.wdExportFormatPDF, false);
@@ -55,7 +58,7 @@ namespace MSOfficeManager.API
             catch (Exception e)
             {
                 App.Close();
-                throw e;
+                throw new Exception($"Не удалось конвертировать файл {Path} путь сохранения {path}", e);
             }
         }
 
@@ -387,20 +390,15 @@ namespace MSOfficeManager.API
         public List<Heading> GetHeadings(int PagesCount)
         {
             try
-            { 
-                List<Heading> h = null;
-                if (IsReadOnly)
-                    h = GetHeadingsReadOnly();
-                else
-                    h = GetHeadingByTableOfContents();
-
+            {
+                List<Heading> h = IsReadOnly ? GetHeadingsReadOnly() : GetHeadingByTableOfContents();
                 if (PagesCount > 0 && h != null && h.Count > 0)
                 {
-                    for (int i = 0; i < h.Count - 1; i++) h[i].PageOrPages = h[i + 1].PageOrPages - h[i].PageOrPages;
+                    for (int i = 0; i < h.Count - 1; i++)
+                        h[i].PageOrPages = h[i + 1].PageOrPages - h[i].PageOrPages;
                     h[h.Count - 1].PageOrPages = 0;
                     h[h.Count - 1].PageOrPages = PagesCount - h.Sum(x => x.PageOrPages);
                 }
-
                 return h;
             }
             catch (Exception e)
@@ -414,7 +412,8 @@ namespace MSOfficeManager.API
         {
             List<Tuple<string, int, int>> h = new List<Tuple<string, int, int>>();
             int pc = Document.Paragraphs.Count;
-            Parallel.For(1, pc, (i) => {
+            Parallel.For(1, pc, (i) =>
+            {
                 Paragraph p = Document.Paragraphs[i];
                 Style style = p.get_Style() as Style;
                 if (style.ParagraphFormat.OutlineLevel != WdOutlineLevel.wdOutlineLevelBodyText)
@@ -424,34 +423,52 @@ namespace MSOfficeManager.API
                     if (!string.IsNullOrEmpty(header))
                         h.Add(new Tuple<string, int, int>(sList + " " + header, (int)p.Range.Information[WdInformation.wdActiveEndAdjustedPageNumber], i));
                 }
+                else if (i == 1)
+                    h.Add(new Tuple<string, int, int>(null, (int)p.Range.Information[WdInformation.wdActiveEndAdjustedPageNumber], i));
             });
             return h.OrderBy(x => x.Item3).Select(x => new Heading(x.Item1, x.Item2)).ToList();
         }
 
         private List<Heading> GetHeadingByTableOfContents()
         {
-            //добавляем раздел
-            Document.Sections[1].Range.InsertBreak(WdBreakType.wdSectionBreakNextPage);
+            if (Document.Paragraphs.Count == 0)
+                return new List<Heading>();
 
-            //добавляем содержание в документ
+            //добавляем раздел для содержания
+            Paragraph parContent = null;
             try
             {
-                Document.TablesOfContents.Add(Document.Sections[1].Range, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing);
+                Document.Paragraphs[1].Range.InsertBreak(WdBreakType.wdSectionBreakNextPage);
+                parContent = Document.Paragraphs.Add(Document.Sections[1].Range);
+                parContent = Document.Paragraphs.Add(Document.Sections[1].Range);
             }
             catch (Exception)
             {
-                return new List<Heading>();
+                return null;
             }
-            Range oRng = Document.TablesOfContents[Document.TablesOfContents.Count].Range;
+
+            //добавляем содержание в документ
+            try
+            {            
+                Document.TablesOfContents.Add(parContent.Range, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing);
+            }
+            catch (Exception)
+            {
+                try { Document.Sections[1].Range.Delete(); } catch (Exception) { }
+                return null;
+            }
+
             //разбиваем поле содержания
-            oRng.Fields.Unlink();
+            Range rangeContent = Document.TablesOfContents[Document.TablesOfContents.Count].Range;
+            rangeContent.Fields.Unlink();
+
             //преобразуем разбитое содержание в таблицу
-            Table oTbl = oRng.ConvertToTable();
+            Table tableContent = rangeContent.ConvertToTable();
 
             //преобразование данных таблицы
-            int columncount = oTbl.Columns.Count;
+            int columncount = tableContent.Columns.Count;
             List<string[]> Content = new List<string[]>();
-            foreach (Row oRow in oTbl.Rows)
+            foreach (Row oRow in tableContent.Rows)
             {
                 string[] str = new string[3];
                 if (columncount > 0)
@@ -480,8 +497,10 @@ namespace MSOfficeManager.API
                 }
                 Content.Add(str);
             }
+
             Document.Sections[1].Range.Delete();
-            List<Heading> h = new List<Heading>();
+            int firstHead = (int)Document.Paragraphs[1].Range.Information[WdInformation.wdActiveEndAdjustedPageNumber];
+            List<Heading> h = new List<Heading>() { new Heading(null, firstHead) };
             for (int i = 0; i < Content.Count; i++)
             {
                 if (Content[i][2] == null || Content[i][2] == "")

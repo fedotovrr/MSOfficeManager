@@ -12,5 +12,6 @@
         NormalBorderCenter = 7,
         NumberingNormalNoborderCenter = 8,
         NumberingNormalBorderCenter = 9,
+        NormalNoborderRight = 10,
     }
 }

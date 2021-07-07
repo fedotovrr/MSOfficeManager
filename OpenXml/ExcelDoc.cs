@@ -34,7 +34,7 @@ namespace MSOfficeManager.OpenXml
         
         public ExcelDoc(string path, bool overwrite)
         {
-            if (Path.GetExtension(path).ToLower() != ".xlsx") throw new Exception("Поддерживается только формат .xlsx");
+            if (Path.GetExtension(path).ToLower() != ".xlsx" && Path.GetExtension(path).ToLower() != ".xlsm") throw new Exception("Поддерживается только форматы .xlsx .xlsm");
             bool ex = File.Exists(path);
             if (ex && overwrite)
             {
@@ -189,7 +189,9 @@ namespace MSOfficeManager.OpenXml
                 // Index 8 - numbering # ##0,00 normal noborder center
                 new CellFormat() { FontId = 1, FillId = 0, BorderId = 0, NumberFormatId = 4, ApplyFont = true, ApplyNumberFormat = true, Alignment = new Alignment() { Horizontal = HorizontalAlignmentValues.Center, Vertical = VerticalAlignmentValues.Center, WrapText = true } },
                 // Index 9 - numbering # ##0,00 normal border center
-                new CellFormat() { FontId = 1, FillId = 0, BorderId = 1, NumberFormatId = 4, ApplyFont = true, ApplyNumberFormat = true, Alignment = new Alignment() { Horizontal = HorizontalAlignmentValues.Center, Vertical = VerticalAlignmentValues.Center, WrapText = true } })
+                new CellFormat() { FontId = 1, FillId = 0, BorderId = 1, NumberFormatId = 4, ApplyFont = true, ApplyNumberFormat = true, Alignment = new Alignment() { Horizontal = HorizontalAlignmentValues.Center, Vertical = VerticalAlignmentValues.Center, WrapText = true } },
+                // Index 10 - normal noborder right
+                new CellFormat() { FontId = 1, FillId = 0, BorderId = 0, NumberFormatId = 0, ApplyFont = true, ApplyNumberFormat = true, Alignment = new Alignment() { Horizontal = HorizontalAlignmentValues.Right, Vertical = VerticalAlignmentValues.Center, WrapText = true } })
             );
         }
 

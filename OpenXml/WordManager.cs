@@ -64,7 +64,7 @@ namespace MSOfficeManager.OpenXml
         /// <returns></returns>
         public static object[][] GetTable(string path, IEnumerable<TemplateTable> tables)
         {
-            if (Path.GetExtension(path).ToLower() != ".docx") throw new Exception("Поддерживается только формат .docx");
+            if (Path.GetExtension(path).ToLower() != ".docx" && Path.GetExtension(path).ToLower() != ".docm") throw new Exception("Поддерживается только форматы .docx .docm");
             FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             object[][] ret;
             try
@@ -100,7 +100,7 @@ namespace MSOfficeManager.OpenXml
         /// <returns></returns>
         public static string[][] GetTextShapeValue(string path, IEnumerable<Func<string, bool>> identifyByName)
         {
-            if (Path.GetExtension(path).ToLower() != ".docx") throw new Exception("Поддерживается только формат .docx");
+            if (Path.GetExtension(path).ToLower() != ".docx" && Path.GetExtension(path).ToLower() != ".docm") throw new Exception("Поддерживается только форматы .docx .docm");
             FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             string[][] ret;
             try
@@ -135,7 +135,7 @@ namespace MSOfficeManager.OpenXml
         /// <param name="table"></param>
         public static void FillTable(string path, string[,] table)
         {
-            if (Path.GetExtension(path).ToLower() != ".docx") throw new Exception("Поддерживается только формат .docx");
+            if (Path.GetExtension(path).ToLower() != ".docx" && Path.GetExtension(path).ToLower() != ".docm") throw new Exception("Поддерживается только форматы .docx .docm");
             WordprocessingDocument doc = WordprocessingDocument.Open(path, true);
             FillTable(doc, table);
         }
@@ -158,7 +158,7 @@ namespace MSOfficeManager.OpenXml
         /// <param name="template"></param>
         public static void FillByTemplate(string path, TemplateData template)
         {
-            if (Path.GetExtension(path).ToLower() != ".docx") throw new Exception("Поддерживается только формат .docx");
+            if (Path.GetExtension(path).ToLower() != ".docx" && Path.GetExtension(path).ToLower() != ".docm") throw new Exception("Поддерживается только форматы .docx .docm");
             WordprocessingDocument doc = WordprocessingDocument.Open(path, true);
             FillByTemplate(doc, template);
         }

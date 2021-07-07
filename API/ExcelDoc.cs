@@ -1,5 +1,6 @@
 ﻿using Microsoft.Office.Interop.Excel;
 using System;
+using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 
@@ -41,6 +42,8 @@ namespace MSOfficeManager.API
         {
             try
             {
+                if (System.IO.Path.GetDirectoryName(path) is string dir && !Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
                 HidePublishing hp = new HidePublishing();
                 hp.Start();
                 Document.ExportAsFixedFormat(XlFixedFormatType.xlTypePDF, path);
@@ -49,7 +52,7 @@ namespace MSOfficeManager.API
             catch (Exception e)
             {
                 App.Close();
-                throw e;
+                throw new Exception($"Не удалось конвертировать файл {Path} путь сохранения {path}", e);
             }
         }
 

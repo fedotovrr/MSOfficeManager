@@ -285,7 +285,7 @@ namespace MSOfficeManager.OpenXml
             {
                 Cell refCell = null;
                 foreach (Cell cell in row.Elements<Cell>())
-                    if (string.Compare(cell.CellReference.Value, cellReference, true) > 0)
+                    if (GetColumnIndex(cell.CellReference.Value) > GetColumnIndex(cellReference))
                     {
                         refCell = cell;
                         break;
@@ -326,8 +326,11 @@ namespace MSOfficeManager.OpenXml
             string str = string.Empty;
             while (column > 0)
             {
-                str = (char)(column % 26 + 64) + str;
+                int c = column % 26;
                 column /= 26;
+                if (c == 0)
+                    column--;
+                str = (char)((c == 0 ? 26 : c) + 64) + str;
             }
             return str + row;
         }
