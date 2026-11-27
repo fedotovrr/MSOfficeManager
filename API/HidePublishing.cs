@@ -28,6 +28,7 @@ namespace MSOfficeManager.API
             Do = true;
             HP = new Thread(Process);
             HP.Name = "HidePublishing";
+            HP.IsBackground = true;
             HP.Start();
         }
 

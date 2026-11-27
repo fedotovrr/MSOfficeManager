@@ -243,7 +243,7 @@ namespace MSOfficeManager.API
         {
             try
             {
-                List<ApplicationClass> Apps = FindApps.GetObjects(typeof(ApplicationClass)) as List<ApplicationClass>;
+                List<Application> Apps = FindApps.GetObjects(typeof(Application)) as List<Application>;
                 if (Apps == null) return false;
                 for (int i = 0; i < Apps.Count; i++)
                     for (int j = 1; j <= Apps[i].Documents.Count; j++)

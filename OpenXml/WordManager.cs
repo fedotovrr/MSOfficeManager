@@ -27,7 +27,7 @@ namespace MSOfficeManager.OpenXml
             doc.AddMainDocumentPart();
             doc.MainDocumentPart.Document = new Document(new Body());
             doc.Save();
-            doc.Close();
+            doc.Dispose();
         }
 
         /// <summary>
@@ -242,7 +242,7 @@ namespace MSOfficeManager.OpenXml
 
             doc.MainDocumentPart.Document.Body.AppendChild(table);
             doc.Save();
-            doc.Close();
+            doc.Dispose();
         }
 
         private static object[][] GetTable(WordprocessingDocument doc, IEnumerable<TemplateTable> tables)
@@ -280,10 +280,10 @@ namespace MSOfficeManager.OpenXml
             }
             catch (Exception e)
             {
-                doc.Close();
+                doc.Dispose();
                 throw e;
             }
-            doc.Close();
+            doc.Dispose();
             return rts.Count > 0 ? rts.ToArray() : null;
         }
 
@@ -311,10 +311,10 @@ namespace MSOfficeManager.OpenXml
             }
             catch (Exception e)
             {
-                doc.Close();
+                doc.Dispose();
                 throw e;
             }
-            doc.Close();
+            doc.Dispose();
             return ret;
         }
 
@@ -352,11 +352,11 @@ namespace MSOfficeManager.OpenXml
                         }
                     }
                 }
-                doc.Close();
+                doc.Dispose();
             }
             catch (Exception e)
             {
-                doc.Close();
+                doc.Dispose();
                 throw e;
             }
         }
@@ -378,11 +378,11 @@ namespace MSOfficeManager.OpenXml
 
                     doc.Save();
                 }
-                doc.Close();
+                doc.Dispose();
             }
             catch (Exception e)
             {
-                doc.Close();
+                doc.Dispose();
                 throw e;
             }
         }
@@ -475,7 +475,7 @@ namespace MSOfficeManager.OpenXml
 
         private static string GetShapeName(WordprocessingShape shape)
         {
-            DocProperties dp = ((shape.Parent as DocumentFormat.OpenXml.Drawing.GraphicData)?.Parent as DocumentFormat.OpenXml.Drawing.Graphic)?.Parent is Anchor a && a.Elements<DocProperties>().Count() > 0 ? a.Elements<DocProperties>().First() : null;
+            DocProperties dp = ((shape.Parent as DocumentFormat.OpenXml.Drawing.GraphicData)?.Parent as DocumentFormat.OpenXml.Drawing.Graphic)?.Parent is OpenXmlCompositeElement a && a.Elements<DocProperties>().Count() > 0 ? a.Elements<DocProperties>().First() : null;
             return dp?.Name;
         }
 
@@ -542,7 +542,7 @@ namespace MSOfficeManager.OpenXml
             wps.AppendChild(tbp);
 
             doc.Save();
-            doc.Close();
+            doc.Dispose();
         }
     }
 }

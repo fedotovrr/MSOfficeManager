@@ -13,5 +13,10 @@
         NumberingNormalNoborderCenter = 8,
         NumberingNormalBorderCenter = 9,
         NormalNoborderRight = 10,
+        NormalBorderLeftNowrap = 11,
+        NormalNoborderLeftNowrap = 12,
+        Date_ddMMyyyy_NormalNoborderRightNowrap = 13,
+        Date_ddMMyyyy_NormalBorderCenterNowrap = 14,
+        Date_ddMMMyy_NormalBorderCenterNowrap = 15,
     }
 }

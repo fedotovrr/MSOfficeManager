@@ -6,6 +6,8 @@ using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml.XPath;
+using DocumentFormat.OpenXml.VariantTypes;
 using Microsoft.Office.Interop.Word;
 using MSOfficeManager.Templates;
 using static MSOfficeManager.Templates.Static;
@@ -162,11 +164,11 @@ namespace MSOfficeManager.API
             if (identifyByName == null || shapes == null || !identifyByName.Any()) return new string[0][];
 
             List<string>[] ret = identifyByName.Select(x => new List<string>()).ToArray();
-            for (int t = 1; t <= shapes.Count; t++)
-                if (shapes[t] != null && shapes[t].TextFrame != null && shapes[t].TextFrame.HasText == -1)
+            foreach (Shape shape in shapes)
+                if (shape != null && shape.TextFrame != null && shape.TextFrame.HasText == -1)
                 {
-                    string valueContent = shapes[t].TextFrame.TextRange.Text?.Trim(GetControls());
-                    string valueName = shapes[t].Name;
+                    string valueContent = shape.TextFrame.TextRange.Text?.Trim(GetControls());
+                    string valueName = shape.Name;
                     int i = 0;
                     foreach (Func<string, bool> f in identifyByName)
                     {
@@ -478,6 +480,12 @@ namespace MSOfficeManager.API
                         case 1:
                             str[0] = oRow.Cells[1].Range.Text;
                             str[0] = str[0].Substring(0, str[0].Length - 2);
+                            if (str[0].Contains("\t") && str[0].Split('\t') is string[] ar && ar.Length > 1)
+                            {
+                                str[0] = ar[0];
+                                if (1 < ar.Length) str[1] = ar[1];
+                                if (2 < ar.Length) str[2] = ar[2];
+                            }
                             break;
                         case 2:
                             str[0] = oRow.Cells[1].Range.Text;
@@ -505,10 +513,14 @@ namespace MSOfficeManager.API
             {
                 if (Content[i][2] == null || Content[i][2] == "")
                 {
-                    if (Content[i][0][0] != '(' || Content[i][0][Content[i][0].Length - 1] != ')')
-                        h.Add(new Heading(Content[i][0], Convert.ToInt32(Content[i][1])));
+                    if (!string.IsNullOrEmpty(Content[i][0]) && (Content[i][0][0] != '(' || Content[i][0][Content[i][0].Length - 1] != ')') && int.TryParse(Content[i][1], out int v))
+                        h.Add(new Heading(Content[i][0], v));
                 }
-                else h.Add(new Heading(Content[i][0] + " " + Content[i][1], Convert.ToInt32(Content[i][2])));
+                else
+                {
+                    if (int.TryParse(Content[i][2], out int v))
+                        h.Add(new Heading(Content[i][0] + " " + Content[i][1], v));
+                }
             }
             return h;
         }
@@ -558,5 +570,7 @@ namespace MSOfficeManager.API
                 throw e;
             }
         }
+
+        private int ToInt(string v) => int.TryParse(v, out int r) ? r : 0;
     }
 }

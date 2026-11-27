@@ -93,6 +93,31 @@ namespace MSOfficeManager.OpenXml
                 columns.Append(new Column() { Min = (UInt32)(c + 1), Max = (UInt32)(c + 1), Width = columnsSize[c] > 0 ? columnsSize[c] + 0.7109375 : columnsSize[c], CustomWidth = true });
         }
 
+        public void SetHiddenColumn(bool[] values)
+        {
+            if (values != null && values.Any() && WorksheetPart.Worksheet.Elements<Columns>().First() is Columns columns)
+            {
+                int i = 0;
+                foreach (Column c in columns)
+                    if (i < values.Length)
+                    {
+                        c.Hidden = values[i];
+                        i++;
+                    }
+                    else
+                        break;
+            }    
+        }
+
+        public void CreateRow(uint index, double rowSize)
+        {
+            SheetData sheetData = WorksheetPart.Worksheet.GetFirstChild<SheetData>();
+            Row row = new Row() { RowIndex = index + 1 };
+            row.Height = rowSize;
+            row.CustomHeight = true;
+            sheetData.Append(row);
+        }
+
         public void SetCellStringValue(string cell1, string cell2, string value, ValueTypes vtype = ValueTypes.String, CellStyles style = CellStyles.NormalNoborderLeft)
         {
             SetCellStringValue(GetRowIndex(cell1), GetColumnIndex(cell1), GetRowIndex(cell2), GetColumnIndex(cell2), value, vtype, style);
@@ -118,7 +143,7 @@ namespace MSOfficeManager.OpenXml
         {
             Cell cell = InsertCellInWorksheet(row + 1, column + 1, WorksheetPart);
             cell.CellValue = new CellValue(value);
-            cell.DataType = new EnumValue<CellValues>((CellValues)vtype);
+            cell.DataType = new EnumValue<CellValues>(ToCellValues(vtype));
             cell.StyleIndex = (uint)style;
         }
 
@@ -152,8 +177,56 @@ namespace MSOfficeManager.OpenXml
                 cell.CellFormula.FormulaType = CellFormulaValues.Array;
                 cell.CellFormula.Reference = cell.CellReference;
             }
-            cell.DataType = new EnumValue<CellValues>((CellValues)vtype);
+            cell.DataType = new EnumValue<CellValues>(ToCellValues(vtype));
             cell.StyleIndex = (uint)style;
+        }
+
+        public void AddConditionalFormatting(string f, string d, string c)
+        {
+            WorkbookStylesPart stylesPart = SpreadSheet.WorkbookPart.GetPartsOfType<WorkbookStylesPart>().FirstOrDefault();
+            if (stylesPart == null)
+            {
+                stylesPart = SpreadSheet.WorkbookPart.AddNewPart<WorkbookStylesPart>();
+                stylesPart.Stylesheet = new Stylesheet();
+            }
+
+            PatternFill patternFill = new PatternFill();
+            patternFill.Append(new BackgroundColor() { Rgb = new HexBinaryValue() { Value = c } });
+            Fill fill = new Fill();
+            fill.Append(patternFill);
+            DifferentialFormat differentialFormat = new DifferentialFormat();
+            differentialFormat.Append(fill);
+            DifferentialFormats differentialFormats = stylesPart.Stylesheet.GetFirstChild<DifferentialFormats>() ?? new DifferentialFormats() { Count = 0U };
+            differentialFormats.Append(differentialFormat);
+
+            ConditionalFormattingRule conditionalFormattingRule = new ConditionalFormattingRule()
+            {
+                Type = ConditionalFormatValues.Expression,
+                FormatId = (uint)(differentialFormats.Count() - 1),
+                Priority = 1,
+                StopIfTrue = true,
+            };
+            conditionalFormattingRule.Append(new Formula() { Text = f });
+
+            ConditionalFormatting conditionalFormatting = new ConditionalFormatting() { SequenceOfReferences = new ListValue<StringValue>() { InnerText = d } };
+            conditionalFormatting.Append(conditionalFormattingRule);
+
+            PageMargins margins = WorksheetPart.Worksheet.GetFirstChild<PageMargins>();
+            if (margins != null)
+                WorksheetPart.Worksheet.InsertBefore(conditionalFormatting, margins);
+            else
+                WorksheetPart.Worksheet.Append(conditionalFormatting);
+
+            stylesPart.Stylesheet.AddChild(differentialFormats);
+        }
+
+        public void AddAutoFilter(string range)
+        {
+            AutoFilter autoFilter = new AutoFilter() { Reference = range };
+            if (WorksheetPart.Worksheet.GetFirstChild<SheetData>() is SheetData d)
+                WorksheetPart.Worksheet.InsertAfter(autoFilter, d);
+            else
+                WorksheetPart.Worksheet.Append(autoFilter);
         }
 
         public void MergeCell(string cell1, string cell2)
@@ -335,6 +408,17 @@ namespace MSOfficeManager.OpenXml
             return str + row;
         }
 
+        private static CellValues ToCellValues(ValueTypes t)
+        {
+            switch (t)
+            {
+                case ValueTypes.String: return CellValues.String;
+                case ValueTypes.Number: return CellValues.Number;
+                case ValueTypes.Date: return CellValues.Date;
+            }
+            return CellValues.String;
+        }
+
 
         public class SheetCells
         {
@@ -377,7 +461,7 @@ namespace MSOfficeManager.OpenXml
                 }
             }
 
-            public ValueTypes ValueType { set => Cell.DataType = new EnumValue<CellValues>((CellValues)value); }
+            public ValueTypes ValueType { set => Cell.DataType = new EnumValue<CellValues>(ToCellValues(value)); }
 
             public CellStyles Style { set => Cell.StyleIndex = (uint)value; }
 

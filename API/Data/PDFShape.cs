@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace MSOfficeManager.API
@@ -10,17 +6,22 @@ namespace MSOfficeManager.API
     [Serializable]
     public class PDFShape
     {
-        /// <summary>
-        /// Имя
-        /// </summary>
         [XmlAttribute]
-        public string Name;
+        public string Name { get; set; }
 
-        /// <summary>
-        /// Файл
-        /// </summary>
         [XmlAttribute]
-        public byte[] File;
+        public byte[] File { get; set; }
+
+        [XmlAttribute]
+        public double dx { get; set; }
+
+        [XmlAttribute]
+        public double dy { get; set; }
+
+        public PDFShape()
+        {
+
+        }
 
         public PDFShape(string name, byte[] file)
         {

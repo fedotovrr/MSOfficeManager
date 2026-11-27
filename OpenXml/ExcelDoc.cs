@@ -90,11 +90,25 @@ namespace MSOfficeManager.OpenXml
                 f[i].FontSize.Val = value;
         }
 
+        public void AddDefine(string n, string v)
+        {
+            DefinedName definedName = new DefinedName() { Name = n, Text = v };
+            if (SpreadSheet.WorkbookPart.Workbook.DefinedNames == null)
+                SpreadSheet.WorkbookPart.Workbook.Append(new DefinedNames());
+            SpreadSheet.WorkbookPart.Workbook.DefinedNames.Append(definedName);
+        }
+
+        public void SetPrecision(bool isFull)
+        {
+            if (SpreadSheet.WorkbookPart.Workbook.CalculationProperties == null)
+                SpreadSheet.WorkbookPart.Workbook.CalculationProperties = new CalculationProperties();
+            SpreadSheet.WorkbookPart.Workbook.CalculationProperties.FullPrecision = isFull;
+        }
 
         public void Save()
         {
             SpreadSheet.Save();
-            SpreadSheet.Close();
+            SpreadSheet.Dispose();
         }
 
         public void Close()
@@ -191,7 +205,17 @@ namespace MSOfficeManager.OpenXml
                 // Index 9 - numbering # ##0,00 normal border center
                 new CellFormat() { FontId = 1, FillId = 0, BorderId = 1, NumberFormatId = 4, ApplyFont = true, ApplyNumberFormat = true, Alignment = new Alignment() { Horizontal = HorizontalAlignmentValues.Center, Vertical = VerticalAlignmentValues.Center, WrapText = true } },
                 // Index 10 - normal noborder right
-                new CellFormat() { FontId = 1, FillId = 0, BorderId = 0, NumberFormatId = 0, ApplyFont = true, ApplyNumberFormat = true, Alignment = new Alignment() { Horizontal = HorizontalAlignmentValues.Right, Vertical = VerticalAlignmentValues.Center, WrapText = true } })
+                new CellFormat() { FontId = 1, FillId = 0, BorderId = 0, NumberFormatId = 0, ApplyFont = true, ApplyNumberFormat = true, Alignment = new Alignment() { Horizontal = HorizontalAlignmentValues.Right, Vertical = VerticalAlignmentValues.Center, WrapText = true } },
+                // Index 11 - normal border left nowrap
+                new CellFormat() { FontId = 1, FillId = 0, BorderId = 1, NumberFormatId = 0, ApplyFont = true, ApplyNumberFormat = true, Alignment = new Alignment() { Horizontal = HorizontalAlignmentValues.Left, Vertical = VerticalAlignmentValues.Center, WrapText = false } },
+                // Index 12 - normal noborder left nowrap
+                new CellFormat() { FontId = 1, FillId = 0, BorderId = 0, NumberFormatId = 0, ApplyFont = true, ApplyNumberFormat = true, Alignment = new Alignment() { Horizontal = HorizontalAlignmentValues.Left, Vertical = VerticalAlignmentValues.Center, WrapText = false } },
+                // Index 13 - date dd.MM.yyyy normal noborder right nowrap
+                new CellFormat() { FontId = 1, FillId = 0, BorderId = 0, NumberFormatId = 14, ApplyFont = true, ApplyNumberFormat = true, Alignment = new Alignment() { Horizontal = HorizontalAlignmentValues.Right, Vertical = VerticalAlignmentValues.Center, WrapText = false } },
+                // Index 14 - date dd.MM.yyyy normal border center nowrap
+                new CellFormat() { FontId = 1, FillId = 0, BorderId = 1, NumberFormatId = 14, ApplyFont = true, ApplyNumberFormat = true, Alignment = new Alignment() { Horizontal = HorizontalAlignmentValues.Center, Vertical = VerticalAlignmentValues.Center, WrapText = false } },
+                // Index 15 - date dd.MMM.yy normal border center nowrap
+                new CellFormat() { FontId = 1, FillId = 0, BorderId = 1, NumberFormatId = 15, ApplyFont = true, ApplyNumberFormat = true, Alignment = new Alignment() { Horizontal = HorizontalAlignmentValues.Center, Vertical = VerticalAlignmentValues.Center, WrapText = false } })
             );
         }
 
@@ -212,7 +236,7 @@ namespace MSOfficeManager.OpenXml
             OpenXmlElement[] stb = s.Descendants<TextBody>().First().ChildElements.ToArray();
             //WordManager.AddShape(sp, ss, stb);
 
-            SpreadSheet.Close();
+            SpreadSheet.Dispose();
             return;
 
             ExcelDoc d2 = new ExcelDoc(@"C:\Users\Федотов РР\Desktop\test2.xlsx", true);

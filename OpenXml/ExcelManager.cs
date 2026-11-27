@@ -80,7 +80,7 @@ namespace MSOfficeManager.OpenXml
             }
 
             wb.Workbook.Save();
-            doc.Close();
+            doc.Dispose();
         }
 
         private static void AddTable(ExcelDoc d, string name, double[] columnsSize, string[] header, string[,] content)
